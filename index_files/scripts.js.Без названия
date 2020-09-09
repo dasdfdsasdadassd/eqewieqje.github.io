@@ -1,0 +1,172 @@
+// Preloader
+  $(window).on('load', function () {
+    $('body').addClass('loaded_hiding');
+    window.setTimeout(function () {
+      $('body').addClass('loaded');
+      $('body').removeClass('loaded_hiding');
+    }, 500);
+  })
+
+// Slider Options
+$('.slider').each(function() {
+	var $this = $(this);
+	var $group = $this.find('.slide_group');
+	var $slides = $this.find('.slide');
+	var bulletArray = [];
+	var currentIndex = 0;
+	var timeout;
+	function move(newIndex) {
+		var animateLeft, slideLeft;
+		advance();
+		if ($group.is(':animated') || currentIndex === newIndex) {
+			return;
+		}
+		bulletArray[currentIndex].removeClass('active');
+		bulletArray[newIndex].addClass('active');
+		if (newIndex > currentIndex) {
+			slideLeft = '100%';
+			animateLeft = '-100%';
+		} else {
+			slideLeft = '-100%';
+			animateLeft = '100%';
+		}
+		$slides.eq(newIndex).css({
+			display: 'block',
+			left: slideLeft
+		});
+		$group.animate({
+			left: animateLeft
+		}, function() {
+			$slides.eq(currentIndex).css({
+				display: 'none'
+			});
+			$slides.eq(newIndex).css({
+				left: 0
+			});
+			$group.css({
+				left: 0
+			});
+			currentIndex = newIndex;
+		});
+	}
+	function advance() {
+		clearTimeout(timeout);
+		timeout = setTimeout(function() {
+			if (currentIndex < ($slides.length - 1)) {
+				move(currentIndex + 1);
+			} else {
+				move(0);
+			}
+		}, 10000);
+	}
+	$('.next_btn').on('click', function() {
+		if (currentIndex < ($slides.length - 1)) {
+			move(currentIndex + 1);
+		} else {
+			move(0);
+		}
+	});
+	$('.previous_btn').on('click', function() {
+		if (currentIndex !== 0) {
+			move(currentIndex - 1);
+		} else {
+			move(3);
+		}
+	});
+	$.each($slides, function(index) {
+		var $button = $('<a class="slide_btn">&bull;</a>');
+		
+		if (index === currentIndex) {
+			$button.addClass('active');
+		}
+		$button.on('click', function() {
+			move(index);
+		}).appendTo('.slide_buttons');
+		bulletArray.push($button);
+	});
+	advance();
+});
+
+// Modal Window
+
+settings = {
+	objModalPopupBtn: ".modalButton",
+	//objModalCloseBtn: ".overlay, .closeBtn",
+	objModalDataAttr: "data-popup"
+}  
+$(settings.objModalPopupBtn).bind("click", function () {
+	if ($(this).attr(settings.objModalDataAttr)) {
+
+		var strDataPopupName = $(this).attr(settings.objModalDataAttr);
+		$(".overlay, #" + strDataPopupName).fadeIn();
+
+	}
+});
+
+$(settings.objModalCloseBtn).bind("click", function () {
+	$(".modal").fadeOut();
+});
+
+$(function(){
+	/*$('.closeBtn, .overlay').click(function(){
+		$('iframe').attr('src', $('iframe').attr('src'));
+	});*/
+});
+
+//Change BG - Login / Registration
+
+$(function(){
+	//  $('#tab-two-label').click(function(){
+	//  	$('.modalWindow').removeClass('popup02a').addClass('popup02b');
+	//  });
+	// $('#tab-one-label').click(function(){
+	// 	$('.modalWindow').removeClass('popup02b').addClass('popup02a');
+	// });
+});
+
+// Open Lostpass modal / Close Reg / Login Modal
+
+$(function(){
+	$('.lostpassbtn').click(function(){
+		$("#popup02").fadeOut();
+	});
+});
+
+$(document).ready(function() {
+  if(window.location.href.indexOf('#start') != -1) {
+    $("#click_popup05").click();
+  }
+
+  if(window.location.href.indexOf('#lk') != -1) {
+    $("#click_popup02").click();
+  }
+
+});
+
+(function($) {
+    'use strict';
+    
+          $('#chattrigger').on( "click", function() {
+              if($('#chattrigger').hasClass('is-open')===true){ return false; }
+              $('#chattrigger').toggleClass('is-open');
+              $.ajax({
+                    url: 'https://vk.com/js/api/openapi.js?157',
+                    dataType: 'script',
+                    cache: true
+              }).done(function() {
+                $('body').append('<div id="vk_community_messages"></div>');
+                VK.Widgets.CommunityMessages("vk_community_messages", 163350151, {
+                    expanded: "1",
+				  welcomeScreen: "1",
+                    //expandTimeout: "360000",
+                    disableExpandChatSound: "1",
+                    //disableNewMessagesSound: "1",
+                    //widgetPosition: "left",
+                    //tooltipButtonText: "Есть вопрос?",
+                    //disableButtonTooltip: "1"
+                    });
+              });
+              return false;
+          });
+          
+})(jQuery);

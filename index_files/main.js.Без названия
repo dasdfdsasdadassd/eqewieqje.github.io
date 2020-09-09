@@ -1,0 +1,181 @@
+var MSG = $("#cp_msg_container");
+var AUTH = $("#cp_auth_container");
+var MENU = $("#cp_menu_container");
+var CONTENT = $("#cp_content_container");
+var PROCESS_SCRIPT = 'cp_process.php';
+
+function CleanContainers()
+{
+	$("#cp_msg_container").html('');
+	$("#cp_auth_container").html('');
+	$("#cp_menu_container").html('');
+	$("#cp_content_container").html('');
+}
+
+function ProcessQuery(d, c = false, clean = false, callback = function(d){}, show_msg = true, clear_msg = true)
+{
+	$.ajax({
+		type: "post",
+		dataType: 'json',
+		url: PROCESS_SCRIPT,
+		data: d,
+		success: function (data) {
+			if (data.redirect)
+			{
+				window.location.href = data.redirect;
+				return;
+			}
+			callback(data);
+			try {
+				if (c) grecaptcha.reset();
+			}
+			catch (e)
+			{
+
+			}
+			if (clean && !data.error) CleanContainers(); else if (clear_msg) $("#cp_msg_container").html('');
+			if ((data.error && show_msg) || (data.message && show_msg) ) $("#cp_msg_container").html(data.message);
+			if (data.auth) AUTH.html(data.auth);
+			if (data.menu) MENU.html(data.menu);
+			if (data.content) $("#cp_content_container").html(data.content);			
+		},
+		error: function () {
+			callback(true);
+			//CleanContainers();
+			if (c) grecaptcha.reset();
+			$("#cp_msg_container").html("Ошибка запроса!");			
+		},
+	});
+}
+
+function DoDonate()
+{
+	if ($("#cp_donate_summ").val() < 1 || $("#cp_donate_summ").val() > 50000){
+		alert('Сумма должна быть от 1 до 50000');
+		return false;
+	}
+	data = $("#cp_donate_form").serialize();
+	$("#DonateBtn").prop('disabled', true);
+	ProcessQuery(data, false, false, function(d){
+		if (d.error) $("#DonateBtn").prop('disabled', false);		
+	});
+}
+
+function ProcessDonate(link)
+{
+	document.location.href = link;
+}
+
+function DoChangePassw()
+{
+	data = $("#cp_change_passw_form").serialize();
+	$("#ChangePasswBtn").prop('disabled', true);
+	ProcessQuery(data, false, false, function(d){
+		$("#ChangePasswBtn").prop('disabled', false);
+		if (!d.error)
+		{
+			$("#cp_oldpassw").val('');
+			$("#cp_passw").val('');
+			$("#cp_passw2").val('');
+		}
+	});
+}
+
+function DoNameChange()
+{
+	a = document.cp_change_rolename_form.reportValidity();
+	if (!a) return;
+	data = $("#cp_change_rolename_form").serialize();
+	$("#ChangeRolenameBtn").prop('disabled', true);
+	ProcessQuery(data, false, true, function(d){
+		$("#ChangeRolenameBtn").prop('disabled', false);
+		if (!d.error)
+		{
+			$("#newname").val('');
+		}
+	});
+}
+
+function DoGuildNameChange()
+{
+	a = document.cp_change_guildname_form.reportValidity();
+	if (!a) return;
+	data = $("#cp_change_guildname_form").serialize();
+	$("#ChangeGuildnameBtn").prop('disabled', true);
+	ProcessQuery(data, false, true, function(d){
+		$("#ChangeGuildnameBtn").prop('disabled', false);
+		if (!d.error)
+		{
+			$("#newname").val('');
+		}
+	});
+}
+
+function ShowPage(p)
+{
+	let data;
+	if (p === 'pclear') {
+		if (!confirm("Хотите сбросить доп. пароль?")) return false;
+		data = {act: p};
+		ProcessQuery(data);
+	} else {
+		data = {act: 'cp', page: p};
+		ProcessQuery(data, false, true);
+	}
+	return false;
+}
+
+function AuthPage(p)
+{
+	let data = {act: 'auth_cp', page: p};
+	ProcessQuery(data, false, true);
+}
+
+function DoLogin()
+{
+	let data = $("#cp_auth").serialize();
+	$("#LoginBtn").prop('disabled', true);
+	ProcessQuery(data, true, true, function(data){
+		$("#LoginBtn").prop('disabled', false);
+		if (data.error || data.message) $('#cp_login_answer').html(data.message);
+	}, false);
+	
+}
+
+function GetRoleInfo()
+{
+	$("#role_info").html('');
+	if ($("#role_select").val() == -1) return;
+	let data = {act: 'role_info', id: $("#role_select").val()};
+	ProcessQuery(data, false, false, function(d){
+		var data;
+		if (d.error || d.message) data = d.message; else data = d.content;
+		$("#role_info").html(data);
+	}, false, false);
+}
+
+function GetGuildInfo()
+{
+	let data = {act: 'guild_info', id: $("#guild_select").val()};
+	ProcessQuery(data, false, false, function(d){
+		var data;
+		if (d.error || d.message) data = d.message; else data = d.content;
+		$("#guild_info").html(data);
+	}, false, false);
+}
+
+function DoGetGift()
+{
+	$("#get_gift_btn").prop('disabled', true);
+	let data = {act: 'dogetgift', id: $("#role_select").val()};
+	ProcessQuery(data, false, false, function(d){
+		var data;
+		if (d.error || d.message) data = d.message; else data = d.content;
+		$("#gift_section").html(data);
+	});
+}
+
+if (!INIT) {
+	let data = {act: 'cp', page: 'main'};
+	ProcessQuery(data, false, true);
+}

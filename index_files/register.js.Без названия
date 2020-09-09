@@ -1,0 +1,88 @@
+function DoReg()
+{
+	$("#RegBtn").prop('disabled', true);
+        form = $("#cp_reg_form");
+	$.ajax({
+		type: "post",
+		dataType: 'json',
+		url: 'cp_process.php',
+		data: form.serialize(),
+		success: function (data) {
+			$("#RegBtn").prop('disabled', false);
+			grecaptcha.reset();
+			if (!data.error) {
+				$("#cp_reg_answer").css("color", "lime").css("font-weight", "bold").text(data.message);
+				$("#cp_login").val("");
+				$("#cp_passw").val("");
+				$("#cp_passw2").val("");
+				$("#cp_email").val("");
+			} else 
+			if (data.error && data.message) {
+				$("#cp_reg_answer").css("color", "red").css("font-weight", "bold").text(data.message);
+			} else {
+				$("#cp_reg_answer").css("color", "red").css("font-weight", "bold").text("Ошибка ответа сервера!");		
+			}
+		},
+		error: function () {
+			grecaptcha.reset();
+			$("#cp_reg_answer").css("color", "red").css("font-weight", "bold").text("Ошибка запроса!");
+		},
+	});
+	return false;	
+}
+
+function CheckPassw2()
+{
+	$("#cp_reg_answer").html('');
+	if ($("#cp_passw").val() != $("#cp_passw2").val()) $("#cp_reg_answer").css("color", "red").css("font-weight", "bold").text('Пароли не совпадают!');	
+}
+
+$("#cp_passw").change(function() {
+	$("#cp_reg_answer").html('');
+	CheckPassw2();
+	$.ajax({
+		type: "post",
+		dataType: 'json',
+		url: 'cp_process.php',
+		data: {act: "passw_check", passw: $("#cp_passw").val()},
+		success: function (data) {
+			if (data.error && data.message) {
+				$("#cp_reg_answer").css("color", "red").css("font-weight", "bold").text(data.message);
+			}
+		}
+	});
+});
+
+$("#cp_login").change(function() {
+	$("#cp_reg_answer").html('');
+	$.ajax({
+		type: "post",
+		dataType: 'json',
+		url: 'cp_process.php',
+		data: {act: "login_check", login: $("#cp_login").val()},
+		success: function (data) {
+			if (data.error && data.message) {
+				$("#cp_reg_answer").css("color", "red").css("font-weight", "bold").text(data.message);
+			}
+		}
+	});
+});
+
+$("#cp_passw2").change(function() {
+	CheckPassw2();
+});
+
+$("#cp_email").change(function() {
+	$("#cp_reg_answer").html('');
+	$.ajax({
+		type: "post",
+		dataType: 'json',
+		url: 'cp_process.php',
+		data: {act: "email_check", email: $("#cp_email").val()},
+		success: function (data) {
+			if (data.error && data.message) {
+				$("#cp_reg_answer").css("color", "red").css("font-weight", "bold").text(data.message);
+			}
+		}
+	});
+});
